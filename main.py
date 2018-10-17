@@ -1,10 +1,9 @@
-import time
 import network
 from machine import Pin
 
 from MicroPythonHttpd import MicroPythonHttpd
 
-PinArray = [16,5,4,0,2,14,12,13,15,3,1,10,9]
+PinArray = []
 
 def doConnect():
     wlan = network.WLAN(network.STA_IF)
@@ -17,24 +16,36 @@ def doConnect():
     print('network config:', wlan.ifconfig())
 
 def initPins():
-    for p in PinArray:
+    for p in [16,5,4,0,2]:
         pin = Pin(p, Pin.OUT,value=1);
+        PinArray.append(pin);
     pass
 
 def postOperate(params):
     print(params)
-    if int(params["switchNum"]) >= 0 and int(params["switchNum"]) < len(PinArray):
-        pass
-    if int(params["isOn"]) == 0:
-        pin.off();
+    switchNum = int(params["switchNum"]);
+    pin = None;
+    if switchNum >= 0 and switchNum < len(PinArray):
+        pin = PinArray[switchNum]
+        if int(params["isOn"]) == 0:
+            pin.off();
+        else:
+            pin.on();
+        return 0, "ok"; #code = 0, message = "ok"
     else:
-        pin.on();
+        return -1, "switchNum is not support!"; #code = 0, message = "zzzz"
 
-    return "{\"code\":0, \"message\":\"ok\"}"
 
 doConnect();
 initPins();
-httpd = MicroPythonHttpd("sssssssss", 80)
-httpd.useGet("/postOperate", postOperate);
-httpd.usePost("/postOperate", postOperate);
-httpd.start() #block;
+try:
+    f = open('index.html', 'r')
+    html = f.read()
+    #print(html)
+    httpd = MicroPythonHttpd(html, 80)
+    httpd.useGet("/postOperate", postOperate);
+    httpd.usePost("/postOperate", postOperate);
+    httpd.start() #block;
+finally:
+    if f:
+        f.close()

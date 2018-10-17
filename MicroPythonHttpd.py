@@ -19,60 +19,71 @@ class MicroPythonHttpd:
         self.servSock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
 
-    def post(self, requestUri, handler):
+    def usePost(self, requestUri, handler):
         self.postMap[requestUri] = handler
 
-    def get(self, requestUri, handler):
+    def useGet(self, requestUri, handler):
         self.getMap[requestUri] = handler
 
     def start(self):
         self.servSock.bind(self.addr)
         self.servSock.listen(self.port)
         while True:
-            client, addr = self.servSock.accept()
-            method, requestUri, paramsMap = self.parseRequest(addr, client.recv(4096).decode('utf-8'))
-            print(requestUri)
-            if method == "GET":
-                if requestUri == "/":
-                    client.send("HTTP/1.1 200 OK\r\n\r\n")
-                    client.send(self.html)
-                else:
-                    flag = False;
-                    if requestUri in self.getMap:
-                        handler = self.getMap[requestUri];
+            try:
+                client, addr = self.servSock.accept()
+                method, requestUri, paramsMap = self.parseRequest(addr, client.recv(4096).decode('utf-8'))
+                print(requestUri)
+                if method == "GET":
+                    if requestUri == "/":
+                        client.send("HTTP/1.1 200 OK\r\n\r\n")
+                        client.send(self.html)
+                    else:
+                        code = -1;
+                        message = ""
+                        if requestUri in self.getMap:
+                            handler = self.getMap[requestUri];
+                            if callable(handler):
+                                try:
+                                    code, message = handler(paramsMap)
+                                except:
+                                    message = "handler error"
+                            else:
+                                message = "request uri not callable"
+                        else:
+                            message = "request uri not exist"
+
+                        client.send("HTTP/1.1 200 OK\r\n\r\n")
+                        client.send("{\"code\":"+str(code)+",\"message\":\"" + message + "\"}")
+
+                elif method == "POST":
+                    code = -1;
+                    message = ""
+                    if requestUri in self.postMap:
+                        handler = self.postMap[requestUri];
+
                         if callable(handler):
                             try:
-                                resp = handler(paramsMap)
-                                client.send("HTTP/1.1 200 OK\r\n\r\n")
-                                client.send(resp)
-                                flag = True;
+                                code, message = handler(paramsMap)
                             except:
-                                pass
-                    if not flag:
-                        client.send("HTTP/1.1 200 OK\r\n\r\n")
-                        client.send("{\"code\":-1,\"message\":\"no url\"}")
+                                message = "handler error"
+                        else:
+                            message = "request uri not callable"
+                    else:
+                        message = "request uri not exist"
 
-            elif method == "POST":
-                flag = False;
-                if requestUri in self.postMap:
-                    handler = self.postMap[requestUri];
-
-                    if callable(handler):
-                        try:
-                            resp = handler(paramsMap)
-                            client.send("HTTP/1.1 200 OK\r\n\r\n")
-                            client.send(resp)
-                            flag = True;
-                        except:
-                            pass
-
-                if not flag:
                     client.send("HTTP/1.1 200 OK\r\n\r\n")
-                    client.send("{\"code\":-1,\"message\":\"no url input\"}")
-            else:
-                client.send("HTTP/1.1 200 OK\r\n\r\n")
-                client.send("{\"code\":-1,\"message\":\"method not support\"}")
-            client.close();
+                    client.send("{\"code\":"+str(code)+",\"message\":\"" + message + "\"}")
+                else:
+                    client.send("HTTP/1.1 200 OK\r\n\r\n")
+                    client.send("{\"code\":-1,\"message\":\"method not support\"}")
+            except:
+                print("exception but continue!")
+            finally:
+                try:
+                    if client is not None:
+                        client.close();
+                except:
+                    print("close error")
 
     def parseRequest(self, addr, content):
         if content != '':
