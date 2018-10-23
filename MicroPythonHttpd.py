@@ -2,6 +2,7 @@ try:
     import usocket as socket
 except:
     import socket
+import time
 
 class MicroPythonHttpd:
     sock = None;
@@ -35,8 +36,8 @@ class MicroPythonHttpd:
                 print(requestUri)
                 if method == "GET":
                     if requestUri == "/":
-                        client.send("HTTP/1.1 200 OK\r\n\r\n")
-                        client.send(self.html)
+                        client.sendall("HTTP/1.1 200 OK\r\nContent-Type: text/html;charset=utf-8\r\n\r\n")
+                        client.sendall(self.html)
                     else:
                         code = -1;
                         message = ""
@@ -52,8 +53,8 @@ class MicroPythonHttpd:
                         else:
                             message = "request uri not exist"
 
-                        client.send("HTTP/1.1 200 OK\r\n\r\n")
-                        client.send("{\"code\":"+str(code)+",\"message\":\"" + message + "\"}")
+                        client.send("HTTP/1.1 200 OK\r\nContent-Type: application/json;charset=utf-8\r\n\r\n")
+                        client.sendall("{\"code\":"+str(code)+",\"message\":\"" + message + "\"}")
 
                 elif method == "POST":
                     code = -1;
@@ -71,28 +72,32 @@ class MicroPythonHttpd:
                     else:
                         message = "request uri not exist"
 
-                    client.send("HTTP/1.1 200 OK\r\n\r\n")
-                    client.send("{\"code\":"+str(code)+",\"message\":\"" + message + "\"}")
+                    client.sendall("HTTP/1.1 200 OK\r\nContent-Type: application/json;charset=utf-8\r\n\r\n")
+                    client.sendall("{\"code\":"+str(code)+",\"message\":\"" + message + "\"}")
                 else:
-                    client.send("HTTP/1.1 200 OK\r\n\r\n")
-                    client.send("{\"code\":-1,\"message\":\"method not support\"}")
-            except:
-                print("exception but continue!")
+                    client.sendall("HTTP/1.1 200 OK\r\nContent-Type: application/json;charset=utf-8\r\n\r\n")
+                    client.sendall("{\"code\":-1,\"message\":\"method not support\"}")
+            except Exception as e:
+                print("exception but continue!", e)
             finally:
                 try:
                     if client is not None:
                         client.close();
-                except:
-                    print("close error")
+                        print("close client")
+                except Exception as e:
+                    print("close error", e)
 
     def parseRequest(self, addr, content):
+        print(content)
+        paramsMap = {}
+        method = "GET"
+        requestUri = ""
         if content != '':
             requestLines = content.split("\r\n");
             protoLine = requestLines[0];
             protoInfoArr = protoLine.split(" ");
             method = protoInfoArr[0];
             url = protoInfoArr[1];
-            paramsMap = {}
             if url != "/":
                 urlInfoArray = url.split("?");
                 requestUri = urlInfoArray[0];
@@ -105,4 +110,4 @@ class MicroPythonHttpd:
             else:
                 requestUri = url;
 
-            return method, requestUri, paramsMap;
+        return method, requestUri, paramsMap;

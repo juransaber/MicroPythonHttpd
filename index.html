@@ -4,6 +4,59 @@
         <meta charset="utf-8">
     </head>
     <body>
-        <button>测试</button>
+        <button id="btnA" btnNum="3">半开</button>
+        <button id="btnB" btnNum="2">常开</button>
+        <button id="btnC" btnNum="1">常锁</button>
+        <button id="btnD" btnNum="0">自动</button>
     </body>
+	<script type="text/javascript">
+		 function click(){
+			 var thiz = this;
+			var btnNum = this.getAttribute("btnNum");
+			var isOn = this.getAttribute("isOn");
+			var data = {switchNum:btnNum, isOn:isOn==1?0:1};
+			post("/postOperate", data, function(resp){
+
+			})
+		}
+
+      document.getElementById("btnA").addEventListener("click", click);
+	  document.getElementById("btnB").addEventListener("click", click);
+	  document.getElementById("btnC").addEventListener("click", click);
+	  document.getElementById("btnD").addEventListener("click", click);
+	  document.getElementById("btnE").addEventListener("click", click);
+
+      function post(url, postData, callback){
+				var oStr = '';
+				var oAjax = new XMLHttpRequest();
+				var paramArr = [];
+
+				if(postData != null){
+						for(var key in postData){
+				　　　　paramArr.push(key+"="+postData[key]);
+				　　};
+						if(paramArr.length != 0){
+								oStr = url + "?" + paramArr.join("&");
+						}else{
+								oStr = url;
+						}
+				}else{
+					oStr = url;
+				}
+				oAjax.open('post', oStr, true);
+				oAjax.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+				//post发送数据
+				oAjax.send();
+				oAjax.onreadystatechange = function(){
+				　　//当状态为4的时候，执行以下操作
+				　　if(oAjax.readyState == 4){
+				　　　　try{
+									callback(JSON.parse(oAjax.responseText));
+				　　　　}catch(e){
+				　　　　　　alert('你访问的页面出错了' + e);
+				　　　　};
+				　　};
+				};
+		}
+	</script>
 </html>

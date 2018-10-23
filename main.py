@@ -1,4 +1,5 @@
 import network
+from machine import Timer
 from machine import Pin
 
 from MicroPythonHttpd import MicroPythonHttpd
@@ -16,25 +17,39 @@ def doConnect():
     print('network config:', wlan.ifconfig())
 
 def initPins():
-    for p in [16,5,4,0,2]:
-        pin = Pin(p, Pin.OUT,value=1);
+    for p in [5,4,14,12]:
+        pin = Pin(p, Pin.OUT,value=0);
         PinArray.append(pin);
     pass
 
+hightLevelPins = [];
 def postOperate(params):
     print(params)
     switchNum = int(params["switchNum"]);
     pin = None;
     if switchNum >= 0 and switchNum < len(PinArray):
+        global hightLevelPins
+        global i
+        i = 0
         pin = PinArray[switchNum]
-        if int(params["isOn"]) == 0:
-            pin.off();
-        else:
-            pin.on();
+        pin.on();
+        hightLevelPins.append(pin);
         return 0, "ok"; #code = 0, message = "ok"
     else:
         return -1, "switchNum is not support!"; #code = 0, message = "zzzz"
 
+i = 0
+def resetPins(t):
+    global i
+    i = i+1;
+    if i == 10 and len(hightLevelPins) > 0:
+        i = 0;
+        for pin in hightLevelPins:
+            pin.off();
+        del hightLevelPins[:];
+
+tim = Timer(-1)
+tim.init(period=50, mode=Timer.PERIODIC, callback=resetPins)
 
 doConnect();
 initPins();
