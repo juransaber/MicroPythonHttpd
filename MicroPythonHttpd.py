@@ -40,39 +40,41 @@ class MicroPythonHttpd:
                     else:
                         code = -1;
                         message = ""
+                        data = None;
                         if requestUri in self.getMap:
                             handler = self.getMap[requestUri];
                             if callable(handler):
                                 try:
-                                    code, message = handler(paramsMap)
-                                except:
-                                    message = "handler error"
+                                    code, data, message = handler(paramsMap)
+                                except Exception as e:
+                                    message = "handler error: " + str(e);
                             else:
                                 message = "request uri not callable"
                         else:
                             message = "request uri not exist"
 
                         client.sendall("HTTP/1.1 200 OK\r\nContent-Type: application/json;charset=utf-8\r\n\r\n")
-                        client.sendall("{\"code\":"+str(code)+",\"message\":\"" + message + "\"}")
+                        client.sendall("{\"code\":"+str(code)+",\"data\":" + (str(data) if (data) else "[]") + ",\"message\":\"" + message + "\"}")
 
                 elif method == "POST":
                     code = -1;
                     message = ""
+                    data = None;
                     if requestUri in self.postMap:
                         handler = self.postMap[requestUri];
 
                         if callable(handler):
                             try:
-                                code, message = handler(paramsMap)
-                            except:
-                                message = "handler error"
+                                code, data, message = handler(paramsMap)
+                            except Exception as e:
+                                message = "handler error: " + str(e);
                         else:
                             message = "request uri not callable"
                     else:
                         message = "request uri not exist"
 
                     client.sendall("HTTP/1.1 200 OK\r\nContent-Type: application/json;charset=utf-8\r\n\r\n")
-                    client.sendall("{\"code\":"+str(code)+",\"message\":\"" + message + "\"}")
+                    client.sendall("{\"code\":"+str(code)+",\"data\":" + (str(data) if (data) else "[]") + ",\"message\":\"" + message + "\"}")
                 else:
                     client.sendall("HTTP/1.1 200 OK\r\nContent-Type: application/json;charset=utf-8\r\n\r\n")
                     client.sendall("{\"code\":-1,\"message\":\"method not support\"}")

@@ -1,9 +1,55 @@
 <!doctype html>
 <html lang="cn">
     <head>
-        <meta charset="utf-8">
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     </head>
     <body>
-        <button>测试</button>
+        <label><input type="checkbox" id="checkbox0" btnNum="0"/>开关0</label>
+        <label><input type="checkbox" id="checkbox1" btnNum="1"/>开关1</label>
     </body>
+	<script type="text/javascript">
+		 function click(){
+			var thiz = this;
+			var btnNum = this.getAttribute("btnNum");
+			var data = {switchNum:btnNum, isOn:this.checked?0:1};
+			post("/postOperate", data, function(resp){
+                console.log(resp)
+			})
+		}
+      document.getElementById("checkbox0").addEventListener("change", click);
+	  document.getElementById("checkbox1").addEventListener("change", click);
+
+      function post(url, postData, callback){
+				var oStr = '';
+				var oAjax = new XMLHttpRequest();
+				var paramArr = [];
+				if(postData != null){
+						for(var key in postData){
+				　　　　paramArr.push(key+"="+postData[key]);
+				　　};
+						if(paramArr.length != 0){
+								oStr = url + "?" + paramArr.join("&");
+						}else{
+								oStr = url;
+						}
+				}else{
+					oStr = url;
+				}
+				oAjax.open('post', oStr, true);
+				oAjax.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+				//post发送数据
+				oAjax.send();
+				oAjax.onreadystatechange = function(){
+				　　//当状态为4的时候，执行以下操作
+				　　if(oAjax.readyState == 4){
+				　　　　try{
+									callback(JSON.parse(oAjax.responseText));
+				　　　　}catch(e){
+				　　　　　　alert('你访问的页面出错了' + e);
+				　　　　};
+				　　};
+				};
+		}
+	</script>
 </html>
