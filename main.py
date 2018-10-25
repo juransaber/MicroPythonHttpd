@@ -73,7 +73,7 @@ def postOperate(params):
 
         return 0, PinData, "ok"; #code = 0, message = "ok"
     else:
-        return -1, "switchNum is not support!"; #code = 0, message = "zzzz"
+        return -1, PinData, "switchNum is not support!"; #code = 0, message = "zzzz"
 
 
 doConnect();
