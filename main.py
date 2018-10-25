@@ -11,9 +11,11 @@ def doConnect():
     wlan.active(True)
     if not wlan.isconnected():
         print('connecting to network...')
+        wlan.ifconfig (('192.168.1.20', '255.255.255.0', '223.5.5.5', '8.8.8.8'))
         wlan.connect('MZY', '20085151')
         while not wlan.isconnected():
             pass
+
     print('network config:', wlan.ifconfig())
 
 def initPins():

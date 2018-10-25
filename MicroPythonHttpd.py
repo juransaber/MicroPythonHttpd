@@ -33,7 +33,6 @@ class MicroPythonHttpd:
             try:
                 client, addr = self.servSock.accept()
                 method, requestUri, paramsMap = self.parseRequest(addr, client.recv(4096).decode('utf-8'))
-                print(requestUri)
                 if method == "GET":
                     if requestUri == "/":
                         client.sendall("HTTP/1.1 200 OK\r\nContent-Type: text/html;charset=utf-8\r\n\r\n")
@@ -53,7 +52,7 @@ class MicroPythonHttpd:
                         else:
                             message = "request uri not exist"
 
-                        client.send("HTTP/1.1 200 OK\r\nContent-Type: application/json;charset=utf-8\r\n\r\n")
+                        client.sendall("HTTP/1.1 200 OK\r\nContent-Type: application/json;charset=utf-8\r\n\r\n")
                         client.sendall("{\"code\":"+str(code)+",\"message\":\"" + message + "\"}")
 
                 elif method == "POST":
@@ -88,7 +87,6 @@ class MicroPythonHttpd:
                     print("close error", e)
 
     def parseRequest(self, addr, content):
-        print(content)
         paramsMap = {}
         method = "GET"
         requestUri = ""
