@@ -56,7 +56,6 @@ def storeData():
             f.close();
 
 def postOperate(params):
-    print(params)
     switchNum = int(params["switchNum"]);
     pin = None;
 
